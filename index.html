@@ -56,7 +56,12 @@
                     return;
                 }
                 inputs.forEach(input => input.disabled = true);
-                resultDiv.innerHTML = '<h3>진행 상황</h3><ul id="history-list"></ul>';
+                let listHtml = '<ul id="tally-list">';
+                lockedMenus.forEach((menu, idx) => {
+                    listHtml += `<li id="menu-item-${idx}" data-count="0">${menu}: 0회</li>`;
+                });
+                listHtml += '</ul>';
+                resultDiv.innerHTML = '<h3>투표 현황</h3>' + listHtml;
             }
 
             // 1회 뽑기 수행
@@ -66,10 +71,10 @@
             drawCount++;
 
             // 화면 표시
-            const historyList = document.getElementById('history-list');
-            const li = document.createElement('li');
-            li.textContent = `${drawCount}번째: ${picked}`;
-            historyList.appendChild(li);
+            const item = document.getElementById(`menu-item-${randomIndex}`);
+            let currentCount = parseInt(item.getAttribute('data-count')) + 1;
+            item.setAttribute('data-count', currentCount);
+            item.textContent = `${picked}: ${currentCount}회`;
 
             // 버튼 상태 업데이트 및 결과 계산
             if (drawCount < 8) {
@@ -96,12 +101,7 @@
                 }
             });
 
-            let html = `<hr><h3>최종 결과</h3>`;
-            html += `<ul>`;
-            lockedMenus.forEach(m => {
-                html += `<li>${m}: ${counts[m]}회</li>`;
-            });
-            html += `</ul>`;
+            let html = `<hr>`;
             
             if (winners.length > 1) {
                 html += `<p class="winner">최종 추천 (동점): ${winners.join(', ')}</p>`;
