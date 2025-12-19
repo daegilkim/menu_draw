@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>메뉴 뽑기</title>
+    <style>
+        body { font-family: 'Apple SD Gothic Neo', sans-serif; padding: 20px; max-width: 600px; margin: 0 auto; }
+        input { padding: 10px; width: 100%; box-sizing: border-box; margin-top: 5px; margin-bottom: 5px; }
+        button { width: 100%; padding: 12px; background-color: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; margin-top: 10px; }
+        button:hover { background-color: #0056b3; }
+        #result { margin-top: 20px; padding: 15px; background-color: #f8f9fa; border: 1px solid #ddd; border-radius: 4px; }
+        .winner { color: #d63384; font-weight: bold; font-size: 1.2em; }
+    </style>
+</head>
+<body>
+    <h1>점심 메뉴 뽑기 (8회 추첨)</h1>
+    <p>후보 메뉴 5가지를 입력해주세요.</p>
+    <div id="inputs">
+        <input type="text" placeholder="메뉴 1" class="menu-input">
+        <input type="text" placeholder="메뉴 2" class="menu-input">
+        <input type="text" placeholder="메뉴 3" class="menu-input">
+        <input type="text" placeholder="메뉴 4" class="menu-input">
+        <input type="text" placeholder="메뉴 5" class="menu-input">
+    </div>
+    <button onclick="runDraw()" id="drawBtn">뽑기 시작 (1/8)</button>
+
+    <div id="result"></div>
+
+    <script>
+        let drawCount = 0; 
+        let history = [];
+        let lockedMenus = [];
+
+        function runDraw() {
+            const btn = document.getElementById('drawBtn');
+            const resultDiv = document.getElementById('result');
+            const inputs = document.querySelectorAll('.menu-input');
+
+            // 8번 완료 후 리셋 로직
+            if (drawCount === 8) {
+                drawCount = 0;
+                history = [];
+                lockedMenus = [];
+                inputs.forEach(input => input.disabled = false);
+                btn.textContent = '뽑기 시작 (1/8)';
+                resultDiv.innerHTML = '';
+                return;
+            }
+
+            // 첫 번째 뽑기 시 초기화
+            if (drawCount === 0) {
+                lockedMenus = Array.from(inputs).map(input => input.value.trim());
+                if (lockedMenus.some(m => m === '')) {
+                    alert('메뉴 5개를 모두 입력해주세요!');
+                    return;
+                }
+                inputs.forEach(input => input.disabled = true);
+                resultDiv.innerHTML = '<h3>진행 상황</h3><ul id="history-list"></ul>';
+            }
+
+            // 1회 뽑기 수행
+            const randomIndex = Math.floor(Math.random() * 5);
+            const picked = lockedMenus[randomIndex];
+            history.push(picked);
+            drawCount++;
+
+            // 화면 표시
+            const historyList = document.getElementById('history-list');
+            const li = document.createElement('li');
+            li.textContent = `${drawCount}번째: ${picked}`;
+            historyList.appendChild(li);
+
+            // 버튼 상태 업데이트 및 결과 계산
+            if (drawCount < 8) {
+                btn.textContent = `뽑기 (${drawCount + 1}/8)`;
+            } else {
+                btn.textContent = '다시 하기';
+                showFinalResult(resultDiv);
+            }
+        }
+
+        function showFinalResult(container) {
+            const counts = {};
+            lockedMenus.forEach(m => counts[m] = 0);
+            history.forEach(m => counts[m]++);
+
+            let maxVal = -1;
+            let winners = [];
+            lockedMenus.forEach(m => {
+                if (counts[m] > maxVal) {
+                    maxVal = counts[m];
+                    winners = [m];
+                } else if (counts[m] === maxVal) {
+                    winners.push(m);
+                }
+            });
+
+            let html = `<hr><h3>최종 결과</h3>`;
+            html += `<ul>`;
+            lockedMenus.forEach(m => {
+                html += `<li>${m}: ${counts[m]}회</li>`;
+            });
+            html += `</ul>`;
+            
+            if (winners.length > 1) {
+                html += `<p class="winner">최종 추천 (동점): ${winners.join(', ')}</p>`;
+            } else {
+                html += `<p class="winner">최종 추천: ${winners[0]}</p>`;
+            }
+            
+            container.innerHTML += html;
+        }
+    </script>
+</body>
+</html>
